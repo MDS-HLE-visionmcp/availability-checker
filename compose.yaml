@@ -1,0 +1,27 @@
+services:
+  airflow:
+    build: .
+    container_name: availability-checker
+    environment:
+      - AVAILABILITYCHECKER_MONGODB__HOST=mongodb
+      - AVAILABILITYCHECKER_MONGODB__DB_NAME=visionmcp
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    ports:
+      - "8080:8080"
+    volumes:
+      - airflow-logs:/opt/airflow/logs
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongodb-data:
+  airflow-logs:

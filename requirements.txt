@@ -1,0 +1,9 @@
+# MongoDB driver
+pymongo>=4.6.0
+
+# OpenCV for RTSP stream checking
+opencv-python-headless>=4.9.0
+
+# Pydantic for data models
+pydantic>=2.5.0
+pydantic-settings>=2.1.0

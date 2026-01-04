@@ -1,0 +1,51 @@
+name: Build on Tag
+run-name: Build Docker Image on Tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger the workflow on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual triggering of the workflow
+
+permissions:
+  contents: read  # Allows the workflow to read the repository contents
+  packages: write  # Allows the workflow to push Docker images to GitHub Packages
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: lower-repo
+        shell: bash
+        run: echo "repository_owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - id: remove-v
+        shell: bash
+        run: echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push API Image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: |
+            ghcr.io/${{ steps.lower-repo.outputs.repository_owner }}/availability-checker:${{ steps.remove-v.outputs.tag }}
+            ghcr.io/${{ steps.lower-repo.outputs.repository_owner }}/availability-checker:latest
+          cache-from: type=registry,ref=ghcr.io/${{ steps.lower-repo.outputs.repository_owner }}/availability-checker:latest
+          cache-to: type=inline
